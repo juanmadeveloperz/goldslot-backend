@@ -4,6 +4,7 @@ import com.goldslot.goldslot_backend.entity.Usuario;
 import com.goldslot.goldslot_backend.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +16,8 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -23,7 +26,8 @@ public class AuthController {
         Usuario usuario = usuarioService.obtenerPorEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario o contraseña incorrectos"));
 
-        if (!usuario.getPassword().equals(password)) {
+        // CAMBIO: usar matches() en lugar de equals()
+        if (!passwordEncoder.matches(password, usuario.getPassword())) {
             throw new RuntimeException("Usuario o contraseña incorrectos");
         }
 
@@ -44,7 +48,7 @@ public class AuthController {
 
         Usuario usuario = new Usuario();
         usuario.setEmail(email);
-        usuario.setPassword(password);
+        usuario.setPassword(passwordEncoder.encode(password)); // CAMBIO: encriptar
         usuario.setNombreEscuela(nombreEscuela);
         usuario.setPlan("básico");
 
