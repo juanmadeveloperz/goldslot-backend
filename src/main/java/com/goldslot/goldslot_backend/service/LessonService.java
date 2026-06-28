@@ -23,6 +23,9 @@ public class LessonService {
     @Autowired
     private AlumnoRepository alumnoRepository;
 
+    @Autowired
+    private DailyNotesService dailyNotesService;
+
     public Lesson crearLesson(Lesson lesson) {
         Usuario usuario = usuarioRepository.findById(lesson.getUsuario().getId())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -58,6 +61,7 @@ public class LessonService {
     }
 
     public void eliminar(Long id) {
+        dailyNotesService.eliminarPorLesson(id);
         lessonRepository.deleteById(id);
     }
 }

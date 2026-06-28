@@ -1,8 +1,10 @@
 package com.goldslot.goldslot_backend.service;
 
 import com.goldslot.goldslot_backend.entity.Alumno;
+import com.goldslot.goldslot_backend.entity.Lesson;
 import com.goldslot.goldslot_backend.entity.Usuario;
 import com.goldslot.goldslot_backend.repository.AlumnoRepository;
+import com.goldslot.goldslot_backend.repository.LessonRepository;
 import com.goldslot.goldslot_backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,12 @@ public class AlumnoService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private DailyNotesService dailyNotesService;
+
+    @Autowired
+    private LessonRepository lessonRepository;
 
     public Alumno crearAlumno(Alumno alumno) {
         Usuario usuario = usuarioRepository.findById(alumno.getUsuario().getId())
@@ -46,6 +54,14 @@ public class AlumnoService {
     }
 
     public void eliminar(Long id) {
+        // Primero elimina las clases del alumno
+        List<Lesson> lessons = lessonRepository.findByAlumnoId(id);
+        for (Lesson lesson : lessons) {
+            dailyNotesService.eliminarPorLesson(lesson.getId());
+        }
+        lessonRepository.deleteAll(lessons);
+
+        // Después elimina el alumno
         alumnoRepository.deleteById(id);
     }
 }

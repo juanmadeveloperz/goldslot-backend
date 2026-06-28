@@ -48,4 +48,9 @@ public class DailyNotesService {
     public void eliminar(Long id) {
         dailyNotesRepository.deleteById(id);
     }
+
+    public void eliminarPorLesson(Long lessonId) {
+        List<DailyNotes> notas = dailyNotesRepository.findByLessonId(lessonId);
+        dailyNotesRepository.deleteAll(notas);
+    }
 }

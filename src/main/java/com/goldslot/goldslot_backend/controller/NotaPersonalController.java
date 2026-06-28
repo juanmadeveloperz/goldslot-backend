@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/notas-personales")
 public class NotaPersonalController {
@@ -43,6 +44,14 @@ public class NotaPersonalController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/usuario/{usuarioId}/fecha/{fecha}")
+    public ResponseEntity<NotaPersonalDTO> obtenerDelDia(@PathVariable Long usuarioId, @PathVariable String fecha) {
+        LocalDate localDate = LocalDate.parse(fecha);
+        return notaPersonalService.obtenerDelDia(usuarioId, localDate)
+                .map(n -> ResponseEntity.ok(convertToDTO(n)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<NotaPersonalDTO>> obtenerPorUsuario(@PathVariable Long usuarioId) {
         List<NotaPersonalDTO> notas = notaPersonalService.obtenerPorUsuario(usuarioId)
@@ -52,21 +61,20 @@ public class NotaPersonalController {
         return ResponseEntity.ok(notas);
     }
 
-    @GetMapping("/usuario/{usuarioId}/fecha/{fecha}")
-    public ResponseEntity<NotaPersonalDTO> obtenerDelDia(@PathVariable Long usuarioId, @PathVariable String fecha) {
-        LocalDate localDate = LocalDate.parse(fecha);
-        return notaPersonalService.obtenerDelDia(usuarioId, localDate)
-                .map(n -> ResponseEntity.ok(convertToDTO(n)))
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<NotaPersonalDTO> actualizar(@PathVariable Long id, @RequestBody NotaPersonalDTO notaDTO) {
-        NotaPersonal notaDetails = new NotaPersonal();
-        notaDetails.setContenido(notaDTO.getContenido());
-        notaDetails.setFecha(notaDTO.getFecha());
+        NotaPersonal notaExistente = notaPersonalService.obtenerPorId(id)
+                .orElseThrow(() -> new RuntimeException("Nota no encontrada"));
 
-        NotaPersonal actualizada = notaPersonalService.crearOActualizar(notaDetails);
+        // Recargar el usuario explícitamente
+        Usuario usuario = usuarioService.obtenerPorId(notaExistente.getUsuario().getId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        notaExistente.setUsuario(usuario);
+        notaExistente.setContenido(notaDTO.getContenido());
+        notaExistente.setFecha(notaDTO.getFecha());
+
+        NotaPersonal actualizada = notaPersonalService.actualizar(notaExistente);
         return ResponseEntity.ok(convertToDTO(actualizada));
     }
 

@@ -27,6 +27,10 @@ public class NotaPersonalService {
         return notaPersonalRepository.save(notaPersonal);
     }
 
+    public NotaPersonal actualizar(NotaPersonal notaPersonal) {
+        return notaPersonalRepository.save(notaPersonal);
+    }
+
     public Optional<NotaPersonal> obtenerPorId(Long id) {
         return notaPersonalRepository.findById(id);
     }
